@@ -26,7 +26,7 @@ checkMatches() {
 	then
 		if [[ -z $match ]] #if matches are empty
 		then
-			echo "$year: $name Not Found Among Male Baby Names"
+			echo "$year: $name not found among male names"
 			return 1 #does not exit, just returns bad value to rank function
 		else
 			return 0
@@ -34,7 +34,7 @@ checkMatches() {
 	else
 		if [[ -z $match ]]
 		then
-			echo "$year: $name Not Found Among Female Baby Names"
+			echo "$year: $name not found among female names"
                         return 1 #does not exit, just returns bad value to rank function
                 else
                         return 0
@@ -161,7 +161,7 @@ checkData() {
 	then
 		return 0
 	else
-		echo "No data for the year: $1">&2
+		echo "No data for $1">&2
 		exit 4
 	fi
 }

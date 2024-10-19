@@ -92,7 +92,22 @@ test './bn 2022 B' 0 'Sam' '2022: Sam ranked 658 out of 14255 male names.
 2022: Sam ranked 6628 out of 17660 female names.' ''
 
 # error case
-test './bn 2022 F' 3 'Sam2' '' 'Badly formatted name: Sam2'  
+test './bn 2022 F' 3 'Sam2' '' 'Badly formatted name: Sam2'
+
+# exit code 1
+test './bn 1999' 1 '' '' 'bn <year> <assigned gender: f|F|m|M|b|B>'
+
+# exit code 4
+test './bn 2050 F' 4 'Scott' '' 'No data for 2050'
+
+#multiple names inputted
+test './bn 1969 m' 0 'sam SCOTT Bob' '1969: sam ranked 318 out of 5042 male names.
+1969: SCOTT ranked 12 out of 5042 male names.
+1969: Bob ranked 380 out of 5042 male names.' ''
+
+#name not found
+test './bn 2000 B' 0 'dshdjfhsdfhjhd' '2000: dshdjfhsdfhjhd not found among male names
+2000: dshdjfhsdfhjhd not found among female names' ''
 
 # multi line error case #2
 test './bn 1111 X' 2 '' '' 'Badly formatted assigned gender: X
