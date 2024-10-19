@@ -1,8 +1,220 @@
 #!/bin/bash
 
-if [[ $2 != "" ]]
+######################################################################
+# Nadeem Elsayed
+# Bash Assignment: Baby Names Utility
+# October 17, 2024
+# This program extracts the baby names from the baby names directory
+# and gives the rank of the baby names based on how much it occurs
+######################################################################
+
+#################################################################
+#checkMatches function
+#parameters:
+#checkMatches match name sex year
+#output:
+#returns 1 if the baby name is not found
+#returns 0 if the baby name is found
+#checks if the already given match string contains any characters
+#################################################################
+checkMatches() {
+	local match=$1
+	local name=$2
+	local sex=$3
+	local year=$4
+	if [[ $sex =~ [m|M] ]]
+	then
+		if [[ -z $match ]] #if matches are empty
+		then
+			echo "$year: $name Not Found Among Male Baby Names"
+			return 1 #does not exit, just returns bad value to rank function
+		else
+			return 0
+		fi
+	else
+		if [[ -z $match ]]
+		then
+			echo "$year: $name Not Found Among Female Baby Names"
+                        return 1 #does not exit, just returns bad value to rank function
+                else
+                        return 0
+                fi
+	fi
+}
+###############################################################################
+#rank function
+#parameters:
+#rank name year sex
+#calculates the ranking of a baby name
+#does this by greping the baby names of the specified gender and numbering them
+#then determines the line number of the name (rank)
+#and determines the total number of names with that sex
+#echoes the year and rank of a name, out of the total occurences of the sex
+#returns 0
+###############################################################################
+rank() {
+	local name=$1
+	local year=$2
+	local sex=$3
+
+	#greping all male and female names from the specified year
+	local babyNameM=$(grep -P -i "\b$name,M,[0-9]+" < us_baby_names/yob$year.txt)
+	local babyNameF=$(grep -P -i "\b$name,F,[0-9]+" < us_baby_names/yob$year.txt)
+	if [[ $sex =~ [b|B] ]]
+	then
+		if checkMatches "$babyNameM" "$name" 'M' "$year" #if checkMatches returns 0 (there are male matches found)
+		then
+			#triple grep: grep all male names, number them, then extract the number (rank)
+			rank=$(cat us_baby_names/yob$year.txt | grep -P ',M,' | grep -P -i -n "\b$name\b" | grep -P -o '^[0-9]+')
+			#grep all male names and then find total line number
+			totNames=$(cat us_baby_names/yob$year.txt | grep -P ',M,' | wc -l)
+			echo "$year: $name ranked $rank out of $totNames male names."
+		fi
+		if checkMatches "$babyNameF" "$name" 'F' "$year" #if checkMatches returns 0 (there are female matches found)
+		then
+			#triple grep: grep all female names, number them, then extract the number (rank)
+			rank=$(cat us_baby_names/yob$year.txt | grep -P ',F,' | grep -P -i -n "\b$name\b" | grep -P -o '^[0-9]+')
+                        #grep all female names and then find total line number
+			totNames=$(cat us_baby_names/yob$year.txt | grep -P ',F,' | wc -l)
+			echo "$year: $name ranked $rank out of $totNames female names."
+		fi
+	elif [[ $sex =~ [f|F] ]]
+	then
+		if checkMatches "$babyNameF" "$name" 'F' "$year"
+                then
+                        #triple grep: grep all female names, number them, then extract the number (rank)
+			rank=$(cat us_baby_names/yob$year.txt | grep -P ',F,' | grep -P -i -n "\b$name\b" | grep -P -o '^[0-9]+')
+			#grep all female names and then find total line number
+                        totNames=$(cat us_baby_names/yob$year.txt | grep -P ',F,' | wc -l)
+			echo "$year: $name ranked $rank out of $totNames female names."
+                fi
+	else
+		if checkMatches "$babyNameM" "$name" 'M' "$year"
+                then
+			#triple grep: grep all male names, number them, then extract the number (rank)
+                        rank=$(cat us_baby_names/yob$year.txt | grep -P ',M,' | grep -P -i -n "\b$name\b" | grep -P -o '^[0-9]+')
+			#grep all male names and then find total line number
+			totNames=$(cat us_baby_names/yob$year.txt | grep -P ',M,' | wc -l)
+			echo "$year: $name ranked $rank out of $totNames male names."
+                fi
+	fi
+	return 0
+}
+################################
+#usage
+#no parameters
+#outputs how to use bn to stderr
+################################
+usage () {
+	echo "bn <year> <assigned gender: f|F|m|M|b|B>">&2
+	return 0
+}
+#################################################
+#help
+#no parameters
+#outputs all instructions on bn, version, and use
+#################################################
+help () {
+	echo "bn"
+	echo "Version 1.0.0"
+	#echo -e enables backslash escape characters
+	echo -e "\tRank Baby Names to standard output."
+	echo -e "\tRead standard input."
+        echo -e "\tThis program extracts baby names and their rank from the baby names directory"
+        echo -e "\tRank is based on how much the baby name occurs"
+	echo "Usage:"
+	echo "bn --help"
+	usage>&1
+	echo -e "\nExample:"
+	echo "bn 2000 F"
+	echo "lucy"
+	echo "2000: lucy ranked 324 out of 17658 female names."
+	return 0
+}
+#######################################
+#checkName
+#parameters:
+#checkName name
+#checks if a name is properly formatted
+#otherwise sends a message to stderr
+#and exits with a value of 3
+#######################################
+checkName() {
+	if [[ $1 =~ ^[a-zA-Z]+$ ]]
+	then
+		return 0
+	else
+		echo "Badly formatted name: $1">&2
+		exit 3
+	fi
+}
+#########################################################
+#checkData
+#parameters:
+#checkData year
+#checks if a file with the specified year of birth exists
+#checks in the us_baby_names directory
+#exits with a value of 4 if the file is not found
+#########################################################
+checkData() {
+	if [[ -f "us_baby_names/yob$1.txt" ]]
+	then
+		return 0
+	else
+		echo "No data for the year: $1">&2
+		exit 4
+	fi
+}
+###################################################
+#programLoop
+#parameters:
+#programLoop year sex
+#checks that there is a file for the specified year
+#reads names from stdin
+#every name is checked for validity
+#then send name, year, and sex to rank function
+###################################################
+programLoop() {
+	year=$1
+	sex=$2
+	checkData $year
+	while read line
+	do
+		for arg in $line
+		do
+			checkName $arg
+			rank $arg $year $sex 
+		done
+	done
+}
+#input checking
+#improperly formatted arguments exit to code 2
+#wrong number of arguments means exiting with code 1
+if [[ $1 == "--help" ]]
 then
-	echo "hello"
-else
-	echo "Improper Usage" >&2
+	help
+
+elif [[ $# == 2 ]]# 2 arguments
+then
+	if [[ $1 =~ ^[1-9][0-9]*$ && $2 =~ ^[f|F|m|M|b|B]$ ]] # if year and sex are properly formatted
+	then
+		programLoop $1 $2
+	elif [[ ! $1 =~ ^[1-9][0-9]*$ && ! $2 =~ ^[f|F|m|M|b|B]$ ]]#both not formatted properly
+	then
+		echo "Badly formatted year and gender: $1 $2">&2
+		usage
+		exit 2
+	elif [[ ! $1 =~ ^[1-9][0-9]*$ ]]
+	then
+		echo "Badly formatted year: $1">&2
+		usage
+		exit 2
+	else
+		echo "Badly formatted assigned gender: $2">&2
+		usage
+		exit 2
+	fi
+else #if improper number of arguments exit with code 1
+	usage
+	exit 1
 fi
