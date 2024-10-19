@@ -193,13 +193,12 @@ programLoop() {
 if [[ $1 == "--help" ]]
 then
 	help
-
-elif [[ $# == 2 ]]# 2 arguments
+elif [[ $# == 2 ]] #2 arguments
 then
 	if [[ $1 =~ ^[1-9][0-9]*$ && $2 =~ ^[f|F|m|M|b|B]$ ]] # if year and sex are properly formatted
 	then
 		programLoop $1 $2
-	elif [[ ! $1 =~ ^[1-9][0-9]*$ && ! $2 =~ ^[f|F|m|M|b|B]$ ]]#both not formatted properly
+	elif [[ ! $1 =~ ^[1-9][0-9]*$ && ! $2 =~ ^[f|F|m|M|b|B]$ ]] #both not formatted properly
 	then
 		echo "Badly formatted year and gender: $1 $2">&2
 		usage
