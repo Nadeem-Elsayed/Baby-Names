@@ -4,3 +4,4 @@ Usage:
 bn "year" "assigned gender: f|F|m|M|b|B"
 
 Name1 Name2 ...
+Reads from standard input until end of file.
