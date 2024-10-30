@@ -3,4 +3,4 @@ This utility bn extracts names provided by the user for a given year and returns
 Usage:
 bn "year" "assigned gender: f|F|m|M|b|B"
 
-Name1 Name2
+Name1 Name2 ...
